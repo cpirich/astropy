@@ -63,7 +63,7 @@ def _line_type(line, delimiter=None):
     ValueError: Unrecognized QDP line...
     """
     _decimal_re = r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?"
-    _command_re = r"READ [TS]ERR(\s+[0-9]+)+"
+    _command_re = r"(?i)read [ts]err(\s+[0-9]+)+"
 
     sep = delimiter
     if delimiter is None:
@@ -598,7 +598,7 @@ class QDP(basic.Basic):
 
         t = Table.read(example_qdp, format='ascii.qdp', table_id=1, names=['a', 'b', 'c', 'd'])
 
-    reads the second table (``table_id=1``) in file ``example.qdp`` containing
+    reads the second table (``table_id=1``) in file ``example_qdp`` containing
     the table above. There are four column names but seven data columns, why?
     Because the ``READ SERR`` and ``READ TERR`` commands say that there are
     three error columns.
