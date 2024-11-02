@@ -245,3 +245,76 @@ def test_get_lines_from_qdp(tmp_path):
         assert file_output[i] == line
         assert list_output[i] == line
         assert text_output[i] == line
+
+
+def test_case_insensitive_commands(tmp_path):
+    example_qdp = """
+        ! Test case-insensitive commands
+        read terr 1
+        Read Serr 2
+        ! Table 0 comment
+        !a a(pos) a(neg) b b_err
+        53000.5   0.25  -0.5   1  0.1
+        54000.5   1.25  -1.5   2  0.2
+        NO NO NO NO NO
+    """
+    test_file = tmp_path / "test.qdp"
+
+    with open(test_file, "w") as fp:
+        print(example_qdp, file=fp)
+
+    t = Table.read(test_file, format="ascii.qdp", names=["a", "b"])
+    assert "a_perr" in t.colnames
+    assert "a_nerr" in t.colnames
+    assert "b_err" in t.colnames
+
+
+def test_case_insensitive_roundtrip(tmp_path):
+    example_qdp = """
+        ! Test case-insensitive roundtrip
+        read terr 1
+        Read Serr 2
+        ! Table 0 comment
+        !a a(pos) a(neg) b b_err
+        53000.5   0.25  -0.5   1  0.1
+        54000.5   1.25  -1.5   2  0.2
+        NO NO NO NO NO
+    """
+    test_file = tmp_path / "test.qdp"
+    test_file2 = tmp_path / "test2.qdp"
+
+    with open(test_file, "w") as fp:
+        print(example_qdp, file=fp)
+
+    t = Table.read(test_file, format="ascii.qdp", names=["a", "b"])
+    t.write(test_file2, format="ascii.qdp")
+
+    t2 = Table.read(test_file2, format="ascii.qdp", names=["a", "b"])
+
+    assert np.allclose(t["a"], t2["a"])
+    assert np.allclose(t["b"], t2["b"])
+    assert np.allclose(t["a_perr"], t2["a_perr"])
+    assert np.allclose(t["a_nerr"], t2["a_nerr"])
+    assert np.allclose(t["b_err"], t2["b_err"])
+
+
+def test_mixed_case_commands(tmp_path):
+    example_qdp = """
+        ! Test mixed case commands
+        READ terr 1
+        read SERR 2
+        ! Table 0 comment
+        !a a(pos) a(neg) b b_err
+        53000.5   0.25  -0.5   1  0.1
+        54000.5   1.25  -1.5   2  0.2
+        NO NO NO NO NO
+    """
+    test_file = tmp_path / "test.qdp"
+
+    with open(test_file, "w") as fp:
+        print(example_qdp, file=fp)
+
+    t = Table.read(test_file, format="ascii.qdp", names=["a", "b"])
+    assert "a_perr" in t.colnames
+    assert "a_nerr" in t.colnames
+    assert "b_err" in t.colnames
