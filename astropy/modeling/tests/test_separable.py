@@ -148,3 +148,51 @@ def test_custom_model_separable():
 
     assert not model_c().separable
     assert np.all(separability_matrix(model_c()) == [True, True])
+
+
+def test_nested_compound_models():
+    cm = models.Linear1D(10) & models.Linear1D(5)
+    nested_cm = models.Pix2Sky_TAN() & cm
+    
+    result = separability_matrix(nested_cm)
+    expected = np.array([
+        [True, True, False, False],
+        [True, True, False, False],
+        [False, False, True, False],
+        [False, False, False, True]
+    ])
+    
+    assert_allclose(result, expected)
+
+def test_complex_nested_compound_models():
+    cm1 = models.Linear1D(10) & models.Linear1D(5)
+    cm2 = models.Polynomial2D(1) & models.Gaussian1D(1, 0, 1)
+    nested_cm = models.Pix2Sky_TAN() & cm1 | cm2
+    
+    result = separability_matrix(nested_cm)
+    expected = np.array([
+        [True, True, False, False],
+        [True, True, False, False],
+        [False, False, True, False],
+        [False, False, False, True]
+    ])
+    
+    assert_allclose(result, expected)
+
+def test_deeply_nested_compound_models():
+    cm1 = models.Linear1D(10) & models.Linear1D(5)
+    cm2 = models.Polynomial2D(1) & models.Gaussian1D(1, 0, 1)
+    cm3 = models.Rotation2D(30) & models.Scale(2)
+    nested_cm = (models.Pix2Sky_TAN() & cm1) | (cm2 & cm3)
+    
+    result = separability_matrix(nested_cm)
+    expected = np.array([
+        [True, True, False, False, False, False],
+        [True, True, False, False, False, False],
+        [False, False, True, True, False, False],
+        [False, False, True, True, False, False],
+        [False, False, False, False, True, True],
+        [False, False, False, False, False, True]
+    ])
+    
+    assert_allclose(result, expected)
